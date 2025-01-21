@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mongodb-buddy
+  name: mongodb-buddy-deployment
   labels:
     app: mongodb
 spec:

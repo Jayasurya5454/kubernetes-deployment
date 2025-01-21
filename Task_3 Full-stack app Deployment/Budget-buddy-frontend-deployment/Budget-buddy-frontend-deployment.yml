@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: budget-buddy-frontend-deployment
+  labels:
+    app: budget-buddy-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: budget-buddy-frontend
+  template:
+    metadata:
+      labels:
+        app: budget-buddy-frontend
+    spec:
+      containers:
+      - name: budget-buddy-frontend
+        image: jayasurya5454/budget-buddy-frontend:latest
+        ports:
+        - containerPort: 80  

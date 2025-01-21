@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongodb-service
+  name: mongodb-buddy-service
   labels:
     app: mongodb
 spec:

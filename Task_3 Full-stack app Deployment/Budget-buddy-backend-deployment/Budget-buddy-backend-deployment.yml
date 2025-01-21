@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata: 
-  name: backend-buddy-backend
+  name: backend-buddy-backend-deployment
   labels:
     app: budget-buddy
     tier: backend  
