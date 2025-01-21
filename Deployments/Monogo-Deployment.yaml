@@ -20,3 +20,9 @@ spec:
         image: mongo:5.0
         ports:
         - containerPort: 27017
+
+
+
+
+
+
