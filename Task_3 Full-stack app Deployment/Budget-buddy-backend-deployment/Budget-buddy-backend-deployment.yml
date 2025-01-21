@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata: 
-  name: backend-buddy
+  name: backend-buddy-backend
   labels:
-    app: budget-buddy-backend
+    app: budget-buddy
     tier: backend  
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: budget-buddy-backend
+      app: budget-buddy
   template:
     metadata:
       labels:
-        app: budget-buddy-backend
+        app: budget-buddy
     spec:
       containers:
       - name: backend-buddy
