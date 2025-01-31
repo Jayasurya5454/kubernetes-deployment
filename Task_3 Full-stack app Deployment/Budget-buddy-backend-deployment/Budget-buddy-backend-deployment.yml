@@ -24,4 +24,4 @@ spec:
         - name: PORT
           value: "5000"
         - name: MONGO_URI
-          value: "mongodb://mongodb-buddy-service:27017/"
+          value: "mongodb://mongodb-buddy-service:27017/BudgetBuddy"
