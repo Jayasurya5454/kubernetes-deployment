@@ -1,13 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend-buddy-backend-service
+  name: backend-buddy-service
   labels:
     app: budget-buddy
 spec:
-  ports:
-    - port: 5000
-      targetPort: 5000
   selector:
-    app: budget-buddy
-  clusterIP: ClusterIP
+    app: budget-buddy  
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: ClusterIP  

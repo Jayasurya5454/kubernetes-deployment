@@ -1,12 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata: 
-  name: backend-buddy-backend-deployment
+  name: backend-buddy-deployment
   labels:
     app: budget-buddy
     tier: backend  
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: budget-buddy
@@ -19,7 +19,9 @@ spec:
       - name: backend-buddy
         image: jayasurya5454/budget-buddy-backend:latest
         ports:
-          - containerPort: 5000   
+          - containerPort: 5000
         env:
-        - name: MONGO_URI
-        value: "mongodb://mongodb-service:27017/budget-buddy"
+          - name: PORT
+            value: "5000"
+          - name: MONGO_URI
+            value: "mongodb://mongo-service:27017"
