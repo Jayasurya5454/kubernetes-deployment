@@ -6,9 +6,9 @@ metadata:
     app: budget-buddy
 spec:
   selector:
-    app: budget-buddy  
+    app: budget-buddy
   ports:
     - protocol: TCP
       port: 5000
       targetPort: 5000
-  type: ClusterIP  
+  clusterIP: None
