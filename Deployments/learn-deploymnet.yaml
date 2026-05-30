@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment 
+metadata: 
+  name: test-deploy
+  labels:
+    service: auth
+    environment: stg
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      service: auth-service-prod
+  template:
+    metadata: 
+      labels:
+        service: auth-service-prod
+    spec:
+      containers:
+      - name: hi-test 
+        image: abc 
