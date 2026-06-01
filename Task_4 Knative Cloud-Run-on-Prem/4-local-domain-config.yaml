@@ -1,0 +1,62 @@
+# =============================================================================
+# Local Domain Configuration for Knative
+#
+# PROBLEM: Knative assigns URLs like:
+#   http://portfolio.default.example.com
+# But "example.com" doesn't resolve locally. You need a real DNS name.
+#
+# SOLUTION — two options depending on your local cluster type:
+#
+# OPTION A: sslip.io (recommended for minikube/kind — no setup needed)
+#   sslip.io is a free public DNS service. Any subdomain with an IP in it
+#   resolves to that IP.
+#   Example: http://portfolio.default.192.168.49.2.sslip.io → 192.168.49.2
+#
+#   Apply this ConfigMap to switch Knative to use sslip.io:
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-domain
+  namespace: knative-serving
+data:
+  # Format: "<your-cluster-ip>.sslip.io": ""
+  # Replace 192.168.49.2 with your actual minikube/kind IP.
+  # Get your IP with: minikube ip   OR   kubectl get nodes -o wide
+  192.168.49.2.sslip.io: ""
+
+---
+# =============================================================================
+# OPTION B: nip.io (alternative to sslip.io, same idea)
+# Just change the domain above to:  192.168.49.2.nip.io: ""
+#
+# OPTION C: Custom local domain (e.g. k8s.local)
+# Add to /etc/hosts: 192.168.49.2  portfolio.default.k8s.local
+# Then set: k8s.local: ""  in the ConfigMap above
+# =============================================================================
+
+---
+# =============================================================================
+# Kourier External IP for minikube
+#
+# PROBLEM: On minikube, LoadBalancer services get stuck in "pending" state
+# because there's no cloud provider to assign an external IP.
+#
+# FIX: Run this in a separate terminal to create a tunnel:
+#   minikube tunnel
+#
+# Then Kourier gets an external IP and Knative URLs start working.
+#
+# For kind clusters use: kubectl port-forward -n kourier-system svc/kourier 8080:80
+# Then access via: http://portfolio.default.localhost:8080
+# (requires Host header or the nip/sslip DNS trick won't work on port-forward)
+# =============================================================================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-kourier
+  namespace: knative-serving
+data:
+  # Enables HTTP/2 — improves performance for multiple concurrent requests.
+  # Same as Cloud Run's HTTP/2 support.
+  enable-http2-auto-detection: "true"

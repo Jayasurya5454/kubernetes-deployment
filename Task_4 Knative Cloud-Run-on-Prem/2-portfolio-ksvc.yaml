@@ -1,0 +1,86 @@
+# =============================================================================
+# KnativeService — "The Cloud Run deploy"
+#
+# WHAT: This is the equivalent of `gcloud run deploy` in a YAML file.
+#       One object replaces: Deployment + Service + HPA + Ingress
+#
+# WHEN you apply this, Knative automatically creates:
+#   - A Revision (snapshot of this exact config, immutable)
+#   - A Route (HTTP routing rules)
+#   - A Configuration (desired state tracker)
+#   - A Kubernetes Deployment + Service under the hood
+#
+# TRADE-OFF vs plain Deployment:
+#   + Scale-to-zero saves resources on idle services
+#   + Built-in revision history / rollback
+#   + Traffic splitting without extra Ingress config
+#   - Cold start latency (first request after scale-to-zero is slow)
+#   - Adds Knative dependency to your cluster
+# =============================================================================
+apiVersion: serving.knative.dev/v1
+kind: Service                        # This is a Knative "ksvc", not a K8s Service
+metadata:
+  name: portfolio
+  namespace: default
+  annotations:
+    # HOW MANY requests one pod handles before Knative scales up another pod.
+    # Default is 100. Lower = more pods at less traffic (better latency).
+    # Higher = fewer pods (better cost). Cloud Run default is also 80-100.
+    autoscaling.knative.dev/target: "10"
+
+    # Scale-to-zero: after this many seconds idle, pod count drops to 0.
+    # Set to "0" to disable scale-to-zero (always keep 1 pod warm).
+    autoscaling.knative.dev/scale-down-delay: "0s"
+
+spec:
+  template:
+    metadata:
+      annotations:
+        # Min/max replicas — same concept as HPA minReplicas/maxReplicas.
+        # minScale: "0" means scale-to-zero is ON (Cloud Run default behavior).
+        # minScale: "1" means always keep 1 warm pod (no cold starts).
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "5"
+
+    spec:
+      # How long Knative waits for your container to handle a request before
+      # killing it. Like Cloud Run's --timeout flag.
+      timeoutSeconds: 300
+
+      containers:
+        - name: portfolio
+          image: jayasurya5454/jayasuryaportfolio:latest
+          ports:
+            - containerPort: 80
+              protocol: TCP
+
+          # Resource requests/limits — same as regular K8s.
+          # Knative uses "requests" for scheduling decisions.
+          resources:
+            requests:
+              cpu: "100m"       # 0.1 CPU core while idle/starting
+              memory: "128Mi"
+            limits:
+              cpu: "500m"       # max 0.5 CPU core under load
+              memory: "256Mi"
+
+          # Readiness probe — Knative waits for this before sending traffic.
+          # Without this, the first request might hit a pod still initializing.
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+  # ==========================================================================
+  # Traffic splitting — this is the Cloud Run "revisions" feature.
+  # When you update the image/config, a new Revision is created.
+  # You control what % of traffic each revision gets.
+  #
+  # Example canary deploy: send 10% to new revision, 90% to stable.
+  # Change to 100/0 once confident, then retire old revision.
+  # ==========================================================================
+  traffic:
+    - latestRevision: true    # "latest" = the most recently created revision
+      percent: 100            # send 100% of traffic here

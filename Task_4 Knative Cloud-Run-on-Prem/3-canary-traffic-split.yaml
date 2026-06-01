@@ -1,0 +1,41 @@
+# =============================================================================
+# Canary Deploy with Traffic Splitting
+#
+# WHAT: After you update portfolio's image, two Revisions exist:
+#   - portfolio-00001  (old stable version)
+#   - portfolio-00002  (new version you just deployed)
+#
+# This manifest sends 90% to stable, 10% to new — a "canary" deployment.
+# If new version looks good: update to 100/0. If broken: 0/100 instant rollback.
+#
+# WHY this is better than Deployment rolling update:
+#   Rolling update replaces pods one-by-one — you can't control the percentage.
+#   Traffic splitting is instant and doesn't depend on pod count.
+#
+# HOW TO USE:
+#   1. First deploy 2-portfolio-ksvc.yaml  → creates portfolio-00001
+#   2. Update the image tag in the spec    → creates portfolio-00002
+#   3. Apply THIS file                     → splits traffic 90/10
+#   4. Promote: change to 0/100 and apply  → full cutover
+# =============================================================================
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: portfolio
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+        - image: jayasurya5454/jayasuryaportfolio:v2  # new version tag
+          ports:
+            - containerPort: 80
+
+  traffic:
+    - revisionName: portfolio-00001   # old stable revision (replace with actual name)
+      percent: 90
+      tag: stable                     # access stable directly: stable-portfolio.default.<ip>.sslip.io
+
+    - latestRevision: true            # new revision (whatever was just deployed)
+      percent: 10
+      tag: canary                     # access canary directly: canary-portfolio.default.<ip>.sslip.io
